@@ -12,6 +12,8 @@ class CardsViewController: UIViewController {
 
     @IBOutlet weak var cardImageView: UIImageView!
     
+    var fadeTransition: FadeTransition!
+    
     var cardInitialCenter: CGPoint!
     var cardInitailTransfer: CGAffineTransform!
     
@@ -31,7 +33,7 @@ class CardsViewController: UIViewController {
     @IBAction func didPanCardImage(_ sender: UIPanGestureRecognizer) {
         
         let imgView = sender.view as! UIImageView
-        let location = sender.location(in: view)
+        //let location = sender.location(in: view)
         let velocity = sender.velocity(in: view)
         let translation = sender.translation(in: view)
         if sender.state == .began {
@@ -40,18 +42,45 @@ class CardsViewController: UIViewController {
             imgView.center = CGPoint(x: cardInitialCenter.x + translation.x, y: cardInitialCenter.y)
         
             if velocity.x > 0 {
-                imgView.transform = imgView.transform.rotated(by: CGFloat(0.2 * M_PI / 180))
+                imgView.transform = imgView.transform.rotated(by: CGFloat(0.2 * Double.pi / 180))
             } else {
-                imgView.transform = imgView.transform.rotated(by: CGFloat(-0.2 * M_PI / 180))
+                imgView.transform = imgView.transform.rotated(by: CGFloat(-0.2 * Double.pi / 180))
             }
             
         } else if sender.state == .ended {
+            print(translation.x)
             UIView.animate(withDuration: 0.2, animations: {
-                imgView.center = self.cardInitialCenter
-                imgView.transform = self.cardInitailTransfer
+                if (translation.x > 150 || translation.x < -150) {
+                    imgView.removeFromSuperview()
+                } else {
+                    imgView.center = self.cardInitialCenter
+                    imgView.transform = self.cardInitailTransfer
+                }
+                
             })
             
         }
+    }
+    
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        let profileVC = segue.destination as! CardProfileViewController
+        
+        let cardImg = cardImageView.image!
+        profileVC.profileImage = cardImg
+        
+        // Set the modal presentation style of your destinationViewController to be custom.
+        profileVC.modalPresentationStyle = UIModalPresentationStyle.custom
+        
+        // Create a new instance of your fadeTransition.
+        fadeTransition = FadeTransition()
+        
+        // Tell the destinationViewController's  transitioning delegate to look in fadeTransition for transition instructions.
+        profileVC.transitioningDelegate = fadeTransition
+        
+        // Adjust the transition duration. (seconds)
+        fadeTransition.duration = 0.5
+        //print("presenting modally")
     }
     
     /*
